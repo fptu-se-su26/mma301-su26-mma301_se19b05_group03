@@ -1,127 +1,40 @@
-# SE AI Audit Project Template
+# STE Mobile
 
-## 1. Project Information
+Ứng dụng di động (Expo + React Native) cho **Môi trường học tập thông minh (STE)** của sinh viên FPT University. App dùng chung REST API với backend Express trong thư mục `../backend`.
 
-| Item | Description |
-|---|---|
-| Course |  |
-| Class |  |
-| Semester | SU26 |
-| Group |  |
-| Topic |  |
-| Repository |  |
+## Tính năng
 
----
+- Đăng nhập bằng tài khoản STE (JWT lưu an toàn qua `expo-secure-store`).
+- **Bảng tin**: xem bài viết học vụ/sự kiện, mở chi tiết, thả cảm xúc.
+- **Thông báo**: đọc thông báo toàn hệ thống và theo học phần.
+- **Tài liệu**: lọc theo học phần, tìm kiếm và mở tài liệu.
+- **Nhóm**: xem nhóm của tôi, khám phá nhóm, xem chi tiết, gửi yêu cầu tham gia, rời nhóm.
+- **Cá nhân**: thông tin tài khoản, truy cập bộ câu hỏi ôn tập, đăng xuất.
+- **Bộ câu hỏi**: làm bài trắc nghiệm và xem kết quả kèm đáp án đúng.
 
-## 2. Team Members
+## Cấu hình API
 
-| No | Student ID | Full Name | GitHub Username | Role | Main Responsibility |
-|---:|---|---|---|---|---|
-| 1 |  |  |  | Leader |  |
-| 2 |  |  |  | Member |  |
-| 3 |  |  |  | Member |  |
-| 4 |  |  |  | Member |  |
-| 5 |  |  |  | Member |  |
+Địa chỉ backend đọc từ `expo.extra.apiBaseUrl` trong `app.json`:
 
----
-
-## 3. Project Structure
-
-```text
-src/
-docs/
-.github/
-README.md
+```json
+"extra": { "apiBaseUrl": "http://localhost:5000/api" }
 ```
 
----
+Sửa giá trị này theo môi trường chạy:
 
-## 4. Required AI Audit Documents
+- **Máy ảo Android**: `http://10.0.2.2:5000/api`
+- **Thiết bị thật / Expo Go**: `http://<IP-LAN-của-máy>:5000/api` (ví dụ `http://192.168.1.10:5000/api`)
+- **iOS simulator / web**: `http://localhost:5000/api`
 
-Each group must maintain the following documents:
+## Chạy app
 
-```text
-docs/AI_AUDIT_LOG.md
-docs/PROMPTS.md
-docs/REFLECTION.md
-docs/CHANGELOG.md
+```bash
+npm install
+npx expo start
 ```
 
----
+Mở bằng Expo Go, Android emulator hoặc iOS simulator. Đảm bảo backend đang chạy và `apiBaseUrl` trỏ đúng.
 
-## 5. Workflow
+## Tài khoản mẫu
 
-Students must follow this workflow:
-
-```text
-Issue → Branch → Commit → Pull Request → Review → Merge
-```
-
-Direct push to the `main` branch should be avoided.
-
----
-
-## 6. Branch Naming Convention
-
-```text
-feature/studentid-task-name
-bugfix/studentid-error-name
-docs/studentid-update-audit-log
-test/studentid-test-case-name
-```
-
-Example:
-
-```text
-feature/se123456-login-page
-bugfix/se123456-login-validation
-docs/se123456-update-ai-audit-log
-```
-
----
-
-## 7. Commit Message Convention
-
-```text
-[StudentID] type: short description
-```
-
-Examples:
-
-```text
-[SE123456] feat: add login page
-[SE123456] fix: fix login validation
-[SE123456] docs: update AI audit log
-[SE123456] test: add login test cases
-```
-
-Common types:
-
-```text
-feat, fix, docs, test, refactor, style, chore
-```
-
----
-
-## 8. How to Run
-
-```text
-Students write project running instructions here.
-```
-
----
-
-## 9. AI Usage Rule
-
-Students are allowed to use AI tools such as ChatGPT, Gemini, Claude, GitHub Copilot, Cursor, Antigravity, or similar tools.
-
-However, all important AI usage must be recorded in:
-
-```text
-docs/AI_AUDIT_LOG.md
-docs/PROMPTS.md
-docs/CHANGELOG.md
-docs/REFLECTION.md
-```
-
-Students must be able to explain, verify, and defend all submitted work.
+Sau khi seed backend (`npm run seed`), đăng nhập với mật khẩu `Fptu@2026`, ví dụ sinh viên `thuannmhe161234@fpt.edu.vn`.
