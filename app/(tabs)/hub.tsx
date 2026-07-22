@@ -102,6 +102,34 @@ export default function HubScreen() {
             tint: palette.success,
             route: '/assignments' as const,
           },
+          {
+            label: 'Tài liệu',
+            description: 'Tải lên và quản lý tài liệu',
+            icon: 'folder-open-outline' as const,
+            tint: palette.brand,
+            route: '/(tabs)/materials' as const,
+          },
+          {
+            label: 'Bài trắc nghiệm',
+            description: 'Tạo, sửa và xuất bản bài trắc nghiệm',
+            icon: 'help-circle-outline' as const,
+            tint: palette.warning,
+            route: '/quizzes' as const,
+          },
+          {
+            label: 'Thông báo',
+            description: 'Đăng thông báo cho lớp',
+            icon: 'megaphone-outline' as const,
+            tint: palette.success,
+            route: '/(tabs)/announcements' as const,
+          },
+          {
+            label: 'Giám sát nhóm',
+            description: 'Theo dõi nhóm dự án sinh viên',
+            icon: 'people-outline' as const,
+            tint: palette.textMuted,
+            route: '/monitor' as const,
+          },
         ]
       : []),
     ...(isAdmin

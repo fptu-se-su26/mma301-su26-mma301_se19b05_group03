@@ -251,8 +251,8 @@ export default function FeedScreen() {
             <Text style={styles.detailContent}>{item.content}</Text>
             {item.tagsNeeded && item.tagsNeeded.length > 0 ? (
               <View style={styles.tags}>
-                {item.tagsNeeded.map((tag) => (
-                  <Badge key={tag} label={tag} tone="neutral" />
+                {item.tagsNeeded.map((tag, index) => (
+                  <Badge key={`post-tag-${item._id}-${tag}-${index}`} label={tag} tone="neutral" />
                 ))}
               </View>
             ) : null}

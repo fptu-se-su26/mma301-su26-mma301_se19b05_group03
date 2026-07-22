@@ -40,14 +40,20 @@
         }
       ],
       "expo-secure-store",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cho phép STE truy cập thư viện ảnh để chọn ảnh đại diện."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
     "extra": {
-      "apiBaseUrl": "http://172.20.10.3:5000/api"
+      "apiBaseUrl": "https://api.123dad.online/api"
     }
   }
 }

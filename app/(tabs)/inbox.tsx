@@ -62,7 +62,7 @@ export default function InboxScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScreenHeader title="Inbox" subtitle="Thông báo và lời mời của bạn" />
+      <ScreenHeader title="Hộp thư" subtitle="Thông báo và lời mời của bạn" />
       <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
         <Text style={styles.sectionTitle}>Lời mời tham gia nhóm</Text>
         {invitations.length === 0 ? <Text style={styles.muted}>Bạn không có lời mời đang chờ.</Text> : invitations.map((item) => (

@@ -336,8 +336,8 @@ export default function TeamDetailScreen() {
         <Card style={styles.card}>
           <Text style={styles.sectionTitle}>Kỹ năng cần tuyển</Text>
           <View style={styles.tags}>
-            {team.skillsNeeded.map((skill) => (
-              <Badge key={skill} label={skill} tone="brand" />
+            {team.skillsNeeded.map((skill, index) => (
+              <Badge key={`required-skill-${skill}-${index}`} label={skill} tone="brand" />
             ))}
           </View>
         </Card>
@@ -345,8 +345,8 @@ export default function TeamDetailScreen() {
 
       <Card style={styles.card}>
         <Text style={styles.sectionTitle}>Thành viên</Text>
-        {(team.members ?? []).map((member) => (
-          <View key={member.user?._id || Math.random().toString()} style={styles.member}>
+        {(team.members ?? []).map((member, index) => (
+          <View key={`${team._id}-member-${member.user?._id || member.user?.name || index}`} style={styles.member}>
             <Avatar name={member.user?.name} size={38} />
             <View style={styles.flex}>
               <Text style={styles.memberName}>{member.user?.name || 'Ẩn danh'}</Text>
@@ -385,8 +385,8 @@ export default function TeamDetailScreen() {
                 {request.message ? <Text style={styles.requestMsg}>“{request.message}”</Text> : null}
                 {request.applicant?.skills && request.applicant.skills.length > 0 ? (
                   <View style={styles.tags}>
-                    {request.applicant.skills.map((skill) => (
-                      <Badge key={skill} label={skill} tone="neutral" />
+                    {request.applicant.skills.map((skill, index) => (
+                      <Badge key={`request-skill-${request._id}-${skill}-${index}`} label={skill} tone="neutral" />
                     ))}
                   </View>
                 ) : null}

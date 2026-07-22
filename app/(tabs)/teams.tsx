@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ type Team = {
   members?: unknown[];
   maxMembers?: number;
 };
+type TeamRecommendation = { team?: Team; score?: number };
 
 const statusTone: Record<string, 'success' | 'warning' | 'neutral'> = {
   recruiting: 'success',
@@ -41,11 +42,17 @@ export default function TeamsScreen() {
   const [query, setQuery] = useState('');
   const mine = useAsync<{ data: { teams: Team[] } }>(() => teamApi.mine(), []);
   const all = useAsync<{ data: Team[] }>(() => teamApi.list({ limit: 30 }), []);
-  const recommended = useAsync<{ data: { recommendations: Team[] } }>(() => teamApi.recommended({ limit: 30 }), []);
+  const recommended = useAsync<{ data: { recommendations: TeamRecommendation[] } }>(
+    () => isStudent ? teamApi.recommended({ limit: 30 }) : Promise.resolve({ data: { recommendations: [] } }),
+    [isStudent]
+  );
 
-  const myTeams = mine.data?.data.teams ?? [];
-  const allTeams = all.data?.data ?? [];
-  const recommendedTeams = recommended.data?.data.recommendations ?? [];
+  const isValidTeam = (team: Team | null | undefined): team is Team => Boolean(team?._id && team.name);
+  const myTeams = (mine.data?.data.teams ?? []).filter(isValidTeam);
+  const allTeams = (all.data?.data ?? []).filter(isValidTeam);
+  const recommendedTeams = (recommended.data?.data.recommendations ?? [])
+    .map((recommendation) => recommendation.team)
+    .filter(isValidTeam);
   const visibleTeams = (view === 'recommended' ? recommendedTeams : allTeams).filter((team) =>
     `${team.name} ${team.topic || ''} ${team.major || ''}`.toLowerCase().includes(query.toLowerCase())
   );
@@ -76,9 +83,7 @@ export default function TeamsScreen() {
         <View style={styles.metaRow}>
           <View style={styles.metaItem}>
             <Ionicons name="people-outline" size={15} color={palette.textFaint} />
-            <Text style={styles.meta}>
-              {team.members?.length || 0}/{team.maxMembers || 0} thành viên
-            </Text>
+            <Text style={styles.meta}>{team.members?.length || 0}/{team.maxMembers || 0} thành viên</Text>
           </View>
           {team.major ? (
             <View style={styles.metaItem}>
@@ -112,32 +117,31 @@ export default function TeamsScreen() {
       ) : error ? (
         <ErrorState message={error} onRetry={onRefresh} />
       ) : (
-        <FlatList
-           data={visibleTeams}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => <TeamCard team={item} />}
+        <ScrollView
           contentContainerStyle={styles.list}
+          keyboardShouldPersistTaps="handled"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          ListHeaderComponent={
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Nhóm của tôi</Text>
-              {myTeams.length === 0 ? (
-                <Text style={styles.emptyMine}>Bạn chưa tham gia nhóm nào.</Text>
-              ) : (
-                myTeams.map((team) => <TeamCard key={team._id} team={team} />)
-              )}
-              <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Khám phá nhóm</Text>
-              <View style={styles.segmented}>
-                <Pressable style={[styles.segment, view === 'all' && styles.segmentActive]} onPress={() => setView('all')}><Text style={view === 'all' ? styles.segmentTextActive : styles.segmentText}>Tất cả</Text></Pressable>
-                {isStudent ? <Pressable style={[styles.segment, view === 'recommended' && styles.segmentActive]} onPress={() => setView('recommended')}><Text style={view === 'recommended' ? styles.segmentTextActive : styles.segmentText}>Gợi ý cho bạn</Text></Pressable> : null}
-              </View>
-              <TextField placeholder="Tìm nhóm theo tên, chủ đề, chuyên ngành" value={query} onChangeText={setQuery} />
+        >
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Nhóm của tôi</Text>
+            {myTeams.length === 0 ? (
+              <Text style={styles.emptyMine}>Bạn chưa tham gia nhóm nào.</Text>
+            ) : (
+              myTeams.map((team, index) => <TeamCard key={`my-team-${team._id}-${index}`} team={team} />)
+            )}
+            <Text style={[styles.sectionTitle, styles.sectionSpacing]}>Khám phá nhóm</Text>
+            <View style={styles.segmented}>
+              <Pressable style={[styles.segment, view === 'all' && styles.segmentActive]} onPress={() => setView('all')}><Text style={view === 'all' ? styles.segmentTextActive : styles.segmentText}>Tất cả</Text></Pressable>
+              {isStudent ? <Pressable style={[styles.segment, view === 'recommended' && styles.segmentActive]} onPress={() => setView('recommended')}><Text style={view === 'recommended' ? styles.segmentTextActive : styles.segmentText}>Gợi ý cho bạn</Text></Pressable> : null}
             </View>
-          }
-          ListEmptyComponent={
+            <TextField placeholder="Tìm nhóm theo tên, chủ đề, chuyên ngành" value={query} onChangeText={setQuery} />
+          </View>
+          {visibleTeams.length === 0 ? (
             <EmptyState title="Chưa có nhóm" description="Chưa có nhóm nào đang hoạt động." />
-          }
-        />
+          ) : (
+            visibleTeams.map((team, index) => <TeamCard key={`explore-team-${team._id}-${index}`} team={team} />)
+          )}
+        </ScrollView>
       )}
     </SafeAreaView>
   );
@@ -166,8 +170,8 @@ const styles = StyleSheet.create({
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   meta: { fontSize: 13, color: palette.textFaint },
   segmented: { flexDirection: 'row', backgroundColor: palette.neutralSoft, borderRadius: 12, padding: 3, gap: 4 },
-  segment: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 9 },
-  segmentActive: { backgroundColor: palette.surface },
+  segment: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 9 },
+  segmentActive: { backgroundColor: palette.surface, shadowColor: '#0f172a', shadowOpacity: 0.06, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
   segmentText: { color: palette.textMuted, fontSize: 13, fontWeight: '600' },
-  segmentTextActive: { color: palette.brand, fontSize: 13, fontWeight: '700' },
+  segmentTextActive: { color: palette.brand, fontSize: 13, fontWeight: '800' },
 });

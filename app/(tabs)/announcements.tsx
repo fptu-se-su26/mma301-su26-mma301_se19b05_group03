@@ -46,7 +46,7 @@ const SCOPE_OPTIONS = [
   { value: 'course', label: 'Theo học phần' },
 ];
 
-const emptyForm = { title: '', content: '', scope: 'global', course: '', audience: 'all', broadcast: false };
+const emptyForm = { title: '', content: '', scope: 'course', course: '', audience: 'all', broadcast: false };
 
 export default function AnnouncementsScreen() {
   const { user } = useAuth();
@@ -70,11 +70,11 @@ export default function AnnouncementsScreen() {
 
   useEffect(() => {
     if (!canManage) return;
-    courseApi
-      .list({ limit: 100 })
+      courseApi
+       .list({ limit: 100, mine: user?.role === 'lecturer' ? 'true' : undefined })
       .then((res: { data: Course[] }) => setCourses(res.data))
       .catch(() => setCourses([]));
-  }, [canManage]);
+  }, [canManage, user?.role]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -106,6 +106,10 @@ export default function AnnouncementsScreen() {
   const submit = async () => {
     if (!form.title.trim() || !form.content.trim()) {
       setFormError('Vui lòng nhập tiêu đề và nội dung.');
+      return;
+    }
+    if (form.scope === 'course' && !form.course) {
+      setFormError('Vui lòng chọn học phần nhận thông báo.');
       return;
     }
     const editing = mode.view === 'editor' ? mode.item : null;
@@ -187,7 +191,7 @@ export default function AnnouncementsScreen() {
             <>
               <ChipSelect
                 label="Phạm vi"
-                options={SCOPE_OPTIONS}
+                options={isAdmin ? SCOPE_OPTIONS : SCOPE_OPTIONS.filter((option) => option.value === 'course')}
                 value={form.scope}
                 onChange={(scope) => setForm({ ...form, scope })}
               />
@@ -271,7 +275,19 @@ export default function AnnouncementsScreen() {
           ) : undefined
         }
       />
-      <TextField label="Tìm thông báo" value={query} onChangeText={setQuery} />
+      <View style={styles.searchBox}>
+        <Ionicons name="search-outline" size={20} color={palette.textFaint} />
+        <TextField
+          containerStyle={styles.searchInput}
+          style={styles.searchField}
+          placeholder="Tìm theo tiêu đề hoặc nội dung..."
+          value={query}
+          onChangeText={setQuery}
+          returnKeyType="search"
+          autoCapitalize="none"
+          clearButtonMode="while-editing"
+        />
+      </View>
       {loading && !refreshing ? (
         <LoadingState />
       ) : error ? (
@@ -313,6 +329,21 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.background },
   flex: { flex: 1 },
   list: { padding: 16, gap: 12 },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+  },
+  searchInput: { flex: 1 },
+  searchField: { borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0 },
   card: { gap: 6 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   meta: { fontSize: 12, color: palette.textFaint },

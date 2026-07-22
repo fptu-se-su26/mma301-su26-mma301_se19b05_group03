@@ -8,11 +8,12 @@ import { Card } from '@/components/ui/card';
 import { ScreenShell } from '@/components/ui/screen-shell';
 import { ErrorState, LoadingState } from '@/components/ui/states';
 import { palette } from '@/constants/palette';
+import { useAuth } from '@/context/auth';
 import { useAsync } from '@/hooks/use-async';
 import { quizApi } from '@/services/api';
 import type { ApiError } from '@/services/api';
 
-type Question = { questionText: string; options: string[] };
+type Question = { questionText: string; options: string[]; correctIndexes?: number[] };
 type Quiz = { _id: string; title: string; questions: Question[]; course?: { code: string } };
 type ReviewItem = {
   questionText: string;
@@ -25,6 +26,8 @@ type Result = { score: number; totalQuestions: number; review: ReviewItem[] };
 
 export default function QuizTakingScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const canTakeQuiz = user?.role === 'student';
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, loading, error, reload } = useAsync<{ data: { quiz: Quiz } }>(
     () => quizApi.get(String(id)),
@@ -41,7 +44,7 @@ export default function QuizTakingScreen() {
     questions.length > 0 && questions.every((_, index) => (answers[index]?.length ?? 0) > 0);
 
   const select = (qIndex: number, oIndex: number) => {
-    if (result) return;
+    if (result || !canTakeQuiz) return;
     setAnswers((prev) => {
       const current = prev[qIndex] ?? [];
       const next = current.includes(oIndex)
@@ -91,6 +94,7 @@ export default function QuizTakingScreen() {
     );
 
   const optionState = (qIndex: number, oIndex: number) => {
+    if (!canTakeQuiz && questions[qIndex]?.correctIndexes?.includes(oIndex)) return 'correct';
     if (result) {
       const review = result.review[qIndex];
       if (review.correctIndexes.includes(oIndex)) return 'correct';
@@ -101,14 +105,16 @@ export default function QuizTakingScreen() {
   };
 
   return (
-    <ScreenShell title="Làm bài" onBack={back}>
+    <ScreenShell title={canTakeQuiz ? 'Làm bài' : 'Xem bộ câu hỏi'} onBack={back}>
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.heading}>
         <Text style={styles.title}>{quiz.title}</Text>
-        <Text style={styles.subtitle}>{questions.length} câu hỏi · có thể chọn nhiều đáp án</Text>
+        <Text style={styles.subtitle}>
+          {questions.length} câu hỏi · {canTakeQuiz ? 'có thể chọn nhiều đáp án' : 'đáp án đúng được tô màu'}
+        </Text>
       </View>
 
-      {result ? (
+      {canTakeQuiz && result ? (
         <Card style={styles.resultCard}>
           <Text style={styles.resultScore}>
             {result.score}/{result.totalQuestions}
@@ -144,13 +150,13 @@ export default function QuizTakingScreen() {
         </Card>
       ))}
 
-      {submitError ? <Text style={styles.error}>{submitError}</Text> : null}
+      {canTakeQuiz && submitError ? <Text style={styles.error}>{submitError}</Text> : null}
 
-      {result ? (
+      {canTakeQuiz && result ? (
         <Button label="Làm lại" variant="secondary" onPress={retake} />
-      ) : (
+      ) : canTakeQuiz ? (
         <Button label="Nộp bài" loading={submitting} disabled={!allAnswered} onPress={submit} />
-      )}
+      ) : null}
     </ScrollView>
     </ScreenShell>
   );

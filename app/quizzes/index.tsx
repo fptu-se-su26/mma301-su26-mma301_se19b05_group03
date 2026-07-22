@@ -20,13 +20,14 @@ type Quiz = {
   questionCount?: number;
   isPublished?: boolean;
   course?: { code: string; title: string };
-  createdBy?: { name: string };
+  createdBy?: { _id: string; name: string };
 };
 
 export default function QuizzesScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const canManage = ['lecturer', 'admin'].includes(user?.role || '');
+  const myId = user?.id || user?._id;
 
   const { data, loading, error, reload } = useAsync<{ data: Quiz[] }>(
     () => quizApi.list({ limit: 50 }),
@@ -109,7 +110,7 @@ export default function QuizzesScreen() {
             </View>
             {item.createdBy ? <Text style={styles.author}>Biên soạn: {item.createdBy.name}</Text> : null}
           </Pressable>
-          {canManage ? (
+          {canManage && (user?.role === 'admin' || item.createdBy?._id === myId) ? (
             <View style={styles.actions}>
               <Button
                 label="Sửa"

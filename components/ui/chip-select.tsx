@@ -15,11 +15,11 @@ export function ChipSelect({ label, options, value, onChange }: ChipSelectProps)
     <View style={styles.wrapper}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View style={styles.chips}>
-        {options.map((option) => {
+        {options.map((option, index) => {
           const active = option.value === value;
           return (
             <Pressable
-              key={option.value}
+              key={`${option.value}-${index}`}
               onPress={() => onChange(option.value)}
               style={[styles.chip, active && styles.chipActive]}>
               <Text style={[styles.chipText, active && styles.chipTextActive]}>{option.label}</Text>

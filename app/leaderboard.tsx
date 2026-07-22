@@ -80,8 +80,8 @@ export default function LeaderboardScreen() {
               </View>
             </View>
             <View style={styles.badgeWrap}>
-              {me.badges.map((badge) => (
-                <View key={badge.key} style={[styles.badgePill, badge.earned && styles.badgePillEarned]}>
+              {me.badges.map((badge, index) => (
+                <View key={`badge-${badge.key}-${index}`} style={[styles.badgePill, badge.earned && styles.badgePillEarned]}>
                   <Text style={[styles.badgeText, badge.earned && styles.badgeTextEarned]}>
                     {badge.earned ? '🏅' : '🔒'} {badge.label}
                   </Text>

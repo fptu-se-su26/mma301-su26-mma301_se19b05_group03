@@ -54,8 +54,8 @@ export default function ProfileScreen() {
           <Card style={styles.card}>
             <Text style={styles.sectionTitle}>Kỹ năng</Text>
             <View style={styles.tags}>
-              {user.skills.map((skill) => (
-                <Badge key={skill} label={skill} tone="neutral" />
+              {user.skills.map((skill, index) => (
+                <Badge key={`profile-skill-${skill}-${index}`} label={skill} tone="neutral" />
               ))}
             </View>
           </Card>

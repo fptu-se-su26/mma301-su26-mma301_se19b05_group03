@@ -36,6 +36,7 @@ type PickedFile = { uri: string; name: string; mimeType?: string };
 export default function MaterialsScreen() {
   const { user } = useAuth();
   const canManage = ['lecturer', 'admin'].includes(user?.role || '');
+  const isAdmin = user?.role === 'admin';
 
   const [courseFilter, setCourseFilter] = useState('');
   const [search, setSearch] = useState('');
@@ -48,7 +49,10 @@ export default function MaterialsScreen() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const courses = useAsync<{ data: Course[] }>(() => courseApi.list({ limit: 100 }), []);
+  const courses = useAsync<{ data: Course[] }>(
+    () => courseApi.list({ limit: 100, mine: user?.role === 'lecturer' ? 'true' : undefined }),
+    [user?.role]
+  );
   const materials = useAsync<{ data: Material[] }>(
     () => materialApi.list({ limit: 50, course: courseFilter || undefined, search: query || undefined }),
     [courseFilter, query]
@@ -56,6 +60,7 @@ export default function MaterialsScreen() {
 
   const items = materials.data?.data ?? [];
   const courseList = useMemo(() => courses.data?.data ?? [], [courses.data]);
+  const manageableCourseIds = useMemo(() => new Set(courseList.map((course) => course._id)), [courseList]);
 
   const chips = useMemo(
     () => [{ _id: '', code: 'Tất cả', title: '' } as Course, ...courseList],
@@ -71,14 +76,9 @@ export default function MaterialsScreen() {
   const openFile = async (material: Material) => {
     setOpeningId(material._id);
     try {
-      await materialApi.download(material._id);
-    } catch {
-      setOpeningId(null);
-    }
-    try {
-      await openProtectedFile(material.fileUrl);
-    } catch {
-      Alert.alert('Không thể mở tệp', 'Tệp không tải được hoặc phiên đăng nhập đã hết hạn.');
+      await openProtectedFile(material.fileUrl, material.title);
+    } catch (requestError) {
+      Alert.alert('Không thể mở tệp', (requestError as Error).message || 'Tệp không tải được hoặc phiên đăng nhập đã hết hạn.');
     }
     setOpeningId(null);
     materials.reload();
@@ -231,7 +231,7 @@ export default function MaterialsScreen() {
           loading={openingId === item._id}
           onPress={() => openFile(item)}
         />
-        {canManage ? (
+        {canManage && (isAdmin || Boolean(item.course?._id && manageableCourseIds.has(item.course._id))) ? (
           <>
             <Pressable style={styles.iconBtn} onPress={() => openEdit(item)}>
               <Ionicons name="create-outline" size={20} color={palette.textMuted} />

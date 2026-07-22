@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import * as DocumentPicker from 'expo-document-picker';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { ScreenShell } from '@/components/ui/screen-shell';
@@ -25,7 +25,6 @@ export default function ProfileEditScreen() {
   const [form, setForm] = useState({
     name: user?.name || '',
     major: user?.major || '',
-    avatarUrl: user?.avatarUrl || '',
     description: user?.description || '',
     gpa: user?.gpa != null ? String(user.gpa) : '',
     skills: (user?.skills || []).join(', '),
@@ -36,16 +35,29 @@ export default function ProfileEditScreen() {
   const [uploading, setUploading] = useState(false);
 
   const pickAvatar = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: 'image/*', copyToCacheDirectory: true });
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Cần quyền truy cập', 'Hãy cho phép ứng dụng truy cập thư viện ảnh để chọn ảnh đại diện.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.9,
+    });
     if (result.canceled) return;
     const asset = result.assets[0];
     const formData = new FormData();
-    formData.append('avatar', { uri: asset.uri, name: asset.name || 'avatar.jpg', type: asset.mimeType || 'image/jpeg' } as unknown as Blob);
+    formData.append('avatar', {
+      uri: asset.uri,
+      name: asset.fileName || 'avatar.jpg',
+      type: asset.mimeType || 'image/jpeg',
+    } as unknown as Blob);
     setUploading(true);
     try {
       const response = await userApi.updateAvatar(formData);
       setUser({ ...(user as NonNullable<typeof user>), ...response.data.user });
-      setForm((current) => ({ ...current, avatarUrl: response.data.user.avatarUrl || '' }));
     } catch (requestError) {
       setError((requestError as ApiError).message || 'Không thể tải ảnh lên.');
     } finally {
@@ -63,7 +75,6 @@ export default function ProfileEditScreen() {
     const payload: Record<string, unknown> = {
       name: form.name.trim(),
       major: form.major.trim(),
-      avatarUrl: form.avatarUrl.trim(),
       description: form.description.trim(),
       skills: toList(form.skills),
     };
@@ -84,17 +95,18 @@ export default function ProfileEditScreen() {
 
   return (
     <ScreenShell title="Chỉnh sửa hồ sơ" onBack={() => router.back()}>
-      <ScrollView style={styles.screen} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.body}
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled">
       <TextField label="Họ và tên" value={form.name} onChangeText={(name) => setForm({ ...form, name })} />
-      <TextField label="Chuyên ngành" value={form.major} onChangeText={(major) => setForm({ ...form, major })} />
-      <Button label="Chọn ảnh đại diện" variant="secondary" loading={uploading} onPress={pickAvatar} />
-      <TextField
-        label="Ảnh đại diện (URL tùy chọn)"
-        placeholder="https://..."
-        autoCapitalize="none"
-        value={form.avatarUrl}
-        onChangeText={(avatarUrl) => setForm({ ...form, avatarUrl })}
-      />
+       <TextField label="Chuyên ngành" value={form.major} onChangeText={(major) => setForm({ ...form, major })} />
+       <Button label="Chọn ảnh đại diện" variant="secondary" loading={uploading} onPress={pickAvatar} />
       {isStudent ? (
         <TextField
           label="GPA (0 - 4)"
@@ -124,14 +136,15 @@ export default function ProfileEditScreen() {
         />
       ) : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button label="Lưu thay đổi" loading={saving} onPress={submit} />
-      </ScrollView>
+       <Button label="Lưu thay đổi" loading={saving} disabled={uploading} onPress={submit} />
+       </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: palette.background },
-  body: { padding: 16, gap: 14 },
+  body: { padding: 16, paddingBottom: 48, gap: 14 },
   error: { color: palette.danger, fontSize: 13 },
 });

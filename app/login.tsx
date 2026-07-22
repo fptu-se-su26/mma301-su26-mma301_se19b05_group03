@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -47,9 +48,7 @@ export default function LoginScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>STE</Text>
-          </View>
+          <Image source={require('@/assets/images/icon.png')} style={styles.logo} resizeMode="contain" accessibilityLabel="Logo STE" />
           <Text style={styles.title}>Môi trường học tập thông minh</Text>
           <Text style={styles.subtitle}>Đăng nhập để tiếp tục với tài khoản FPT University của bạn.</Text>
 
@@ -93,15 +92,11 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { flexGrow: 1, justifyContent: 'center', padding: 24, gap: 8 },
   logo: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: palette.brand,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 82,
+    height: 82,
+    borderRadius: 20,
     marginBottom: 8,
   },
-  logoText: { color: '#fff', fontSize: 20, fontWeight: '800' },
   title: { fontSize: 24, fontWeight: '800', color: palette.text },
   subtitle: { fontSize: 14, color: palette.textMuted, marginBottom: 12 },
   form: { gap: 14, marginTop: 8 },

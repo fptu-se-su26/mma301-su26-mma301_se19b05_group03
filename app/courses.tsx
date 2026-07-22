@@ -231,6 +231,13 @@ function ManageCourses() {
                 style={styles.flex}
                 onPress={() => router.push(`/course-analytics?id=${course._id}`)}
               />
+              <Button
+                label="Sổ điểm"
+                variant="secondary"
+                size="sm"
+                style={styles.flex}
+                onPress={() => router.push(`/course-gradebook?id=${course._id}`)}
+              />
             </View>
             <View style={styles.cardActions}>
               <Pressable style={styles.iconBtn} onPress={() => openEdit(course)}>
